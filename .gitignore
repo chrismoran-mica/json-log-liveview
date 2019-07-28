@@ -9,3 +9,4 @@ compiled
 .env
 .DS_Store
 coverage
+app.log
