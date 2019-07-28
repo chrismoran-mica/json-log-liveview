@@ -1,16 +1,16 @@
 {
-  "name": "json-log-viewer",
-  "version": "0.1.2",
-  "description": "JSON Log Viewer",
+  "name": "json-log-liveview",
+  "version": "0.2.0",
+  "description": "Live JSON log file viewer",
   "main": "src/index.js",
-  "author": "Felipe Coury",
-  "repository": "https://github.com/gistia/json-log-viewer",
+  "author": "Fabian Kästner",
+  "repository": "https://github.com/kruemel01/json-log-liveview",
   "license": "MIT",
   "engines": {
     "node": ">=8.0.0"
   },
   "bin": {
-    "jv": "./src/index.js"
+    "jlv": "./src/index.js"
   },
   "dependencies": {
     "blessed": "0.1.81",
