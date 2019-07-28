@@ -61,4 +61,16 @@ function readLog(file, reader=fs) {
   });
 };
 
-module.exports = { readLog, transform };
+function readLogAsync(file, callback, reader=fs) {
+  reader.readFile(file, (err, data) => {
+    const contents = data.toString();
+    const lines = _.compact(contents.split('\n').filter(line => line).map(parse));
+    callback(err, lines.map(line => {
+      const result = _.pick(line, ['timestamp', 'level', 'message']);
+      const data = _.omit(line, ['timestamp', 'level', 'message']);
+      return Object.assign({}, result, { data });
+    }));
+  });
+};
+
+module.exports = { readLog, readLogAsync, transform };

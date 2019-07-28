@@ -18,7 +18,7 @@ if (!logFile) {
 
 const screen = blessed.screen({
   smartCSR: true,
-  log: opts.log,
+  log: './logfile.log',
 });
 screen.key(['C-c'], function(_ch, _key) {
   return process.exit(0);

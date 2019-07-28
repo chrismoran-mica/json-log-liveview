@@ -1,7 +1,7 @@
 const blessed = require('blessed');
 const _ = require('lodash');
 
-const { readLog } = require('../log');
+const { readLog, readLogAsync, watchLog } = require('../log');
 const { formatRows, levelColors } = require('../utils');
 
 const BaseWidget = require('./BaseWidget');
@@ -27,6 +27,9 @@ class MainPanel extends BaseWidget {
     this.mode = 'normal';
     this.updated = true;
 
+    this.contentList = blessed.element({ tags: true });
+    this.append(this.contentList);
+
     this.log('pageWidth', this.pageWidth);
     this.on('resize', () => {
       this.screen.render();
@@ -41,9 +44,12 @@ class MainPanel extends BaseWidget {
 
   loadFile(file) {
     this.file = file;
-    this.rawLines = readLog(file);
-    this.log('loaded', this.lines.length);
-    this.renderLines();
+    readLogAsync(file, (err, data) => {
+      this.rawLines = data;
+      this.setUpdated();
+      this.log('loaded', this.lines.length);
+      this.renderLines();
+    });
   }
 
   get lastRow() {
@@ -506,9 +512,7 @@ class MainPanel extends BaseWidget {
 
     const content = formatRows(
       this.rows, columns, this.colSpacing, this.pageWidth-1).map(highlight).join('\n');
-    const [existing] = this.children.filter(o => o.type === 'element');
-    const list = existing || blessed.element({ tags: true });
-    list.setContent(content);
+    this.contentList.setContent(content);
     this.screen.render();
     if (notify) {
       this.setUpdated();
