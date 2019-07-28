@@ -1,84 +1,84 @@
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
-const ini = require('ini');
-const _ = require('lodash');
+const fs = require('fs')
+const os = require('os')
+const path = require('path')
+const ini = require('ini')
+const _ = require('lodash')
 
-let _transform = 'unloaded';
+let _transform = 'unloaded'
 
-function loadTransform(_fs=fs) {
+function loadTransform (_fs = fs) {
   if (_transform === 'unloaded') {
-    const transformFile = path.join(os.homedir(), '.json-log-viewer');
+    const transformFile = path.join(os.homedir(), '.json-log-viewer')
     if (!_fs.existsSync(transformFile)) {
-      return;
+      return
     }
 
-    const contents = _fs.readFileSync(transformFile, 'utf8');
-    const { transform } = ini.parse(contents);
+    const contents = _fs.readFileSync(transformFile, 'utf8')
+    const { transform } = ini.parse(contents)
     if (!transform) {
-      return;
+      return
     }
 
-    _transform = transform;
+    _transform = transform
   }
 
-  return _transform;
+  return _transform
 }
 
-function transform(entry, _fs=fs) {
-  const transform = loadTransform(_fs);
+function transform (entry, _fs = fs) {
+  const transform = loadTransform(_fs)
   if (!transform) {
-    return entry;
+    return entry
   }
 
   return Object.keys(transform).reduce((hash, key) => {
-    const value = transform[key];
+    const value = transform[key]
     if (value === '$') {
-      hash[key] = _.cloneDeep(entry);
+      hash[key] = _.cloneDeep(entry)
     } else {
-      hash[key] = _.get(entry, value);
+      hash[key] = _.get(entry, value)
     }
-    return hash;
-  }, {});
+    return hash
+  }, {})
 }
 
-function parse(line) {
+function parse (line) {
   try {
-    return transform(JSON.parse(line));
+    return transform(JSON.parse(line))
   } catch (e) {
-    return null;
+    return null
   }
 }
 
-function readLog(file, reader=fs) {
-  const contents = reader.readFileSync(file).toString();
-  const lines = _.compact(contents.split('\n').filter(line => line).map(parse));
+function readLog (file, reader = fs) {
+  const contents = reader.readFileSync(file).toString()
+  const lines = _.compact(contents.split('\n').filter(line => line).map(parse))
 
   return lines.map(line => {
-    const result = _.pick(line, ['timestamp', 'level', 'message']);
-    const data = _.omit(line, ['timestamp', 'level', 'message']);
-    return Object.assign({}, result, { data });
-  });
+    const result = _.pick(line, ['timestamp', 'level', 'message'])
+    const data = _.omit(line, ['timestamp', 'level', 'message'])
+    return Object.assign({}, result, { data })
+  })
 };
 
-function readLogAsync(file, callback, reader=fs) {
+function readLogAsync (file, callback, reader = fs) {
   reader.readFile(file, (err, data) => {
-    const contents = data.toString();
-    const lines = _.compact(contents.split('\n').filter(line => line).map(parse));
+    const contents = data.toString()
+    const lines = _.compact(contents.split('\n').filter(line => line).map(parse))
     callback(err, lines.map(line => {
-      const result = _.pick(line, ['timestamp', 'level', 'message']);
-      const data = _.omit(line, ['timestamp', 'level', 'message']);
-      return Object.assign({}, result, { data });
-    }));
-  });
+      const result = _.pick(line, ['timestamp', 'level', 'message'])
+      const data = _.omit(line, ['timestamp', 'level', 'message'])
+      return Object.assign({}, result, { data })
+    }))
+  })
 };
 
-function watchLog(file, callback) {
+function watchLog (file, callback) {
   fs.watch(file, (event) => {
     if (event === 'change') {
-      readLogAsync(file, callback);
+      readLogAsync(file, callback)
     }
-  });
+  })
 }
 
-module.exports = { readLog, readLogAsync, transform, watchLog };
+module.exports = { readLog, readLogAsync, transform, watchLog }
