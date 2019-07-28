@@ -1,7 +1,7 @@
 const blessed = require('blessed');
 const _ = require('lodash');
 
-const { readLog, readLogAsync, watchLog } = require('../log');
+const { readLogAsync, watchLog } = require('../log');
 const { formatRows, levelColors } = require('../utils');
 
 const BaseWidget = require('./BaseWidget');
