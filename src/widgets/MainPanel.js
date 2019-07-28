@@ -44,12 +44,17 @@ class MainPanel extends BaseWidget {
 
   loadFile(file) {
     this.file = file;
-    readLogAsync(file, (err, data) => {
-      this.rawLines = data;
-      this.setUpdated();
-      this.log('loaded', this.lines.length);
-      this.renderLines();
-    });
+    readLogAsync(file, this.updateLines.bind(this));
+    watchLog(file, this.updateLines.bind(this));
+  }
+
+  updateLines(err, data) {
+    this.rawLines = this.rawLines || [];
+    // push only new lines after rawlines.length
+    this.rawLines.push(...data.slice(this.rawLines.length));
+    this.setUpdated();
+    this.log('loaded', this.lines.length);
+    this.renderLines();
   }
 
   get lastRow() {

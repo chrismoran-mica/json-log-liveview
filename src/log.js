@@ -73,4 +73,12 @@ function readLogAsync(file, callback, reader=fs) {
   });
 };
 
-module.exports = { readLog, readLogAsync, transform };
+function watchLog(file, callback) {
+  fs.watch(file, (event) => {
+    if (event === 'change') {
+      readLogAsync(file, callback);
+    }
+  });
+}
+
+module.exports = { readLog, readLogAsync, transform, watchLog };
