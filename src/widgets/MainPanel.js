@@ -36,12 +36,13 @@ class MainPanel extends BaseWidget {
       this.fixCursor()
       this.renderLines()
     })
-    this.renderLines()
+
+    this.loadFile(opts.logFile)
   }
 
   get pageHeight () { return this.height - 3 }
-  ;
-  get pageWidth () { return this.width - 2 - 2 };
+
+  get pageWidth () { return this.width - 2 - 2 }
 
   loadFile (file) {
     this.file = file
@@ -50,6 +51,10 @@ class MainPanel extends BaseWidget {
   }
 
   updateLines (err, data) {
+    if (err) {
+      this.log('Error reading file: ', err)
+      return
+    }
     this.rawLines = this.rawLines || []
     // push only new lines after rawlines.length
     this.rawLines.push(...data.slice(this.rawLines.length))
