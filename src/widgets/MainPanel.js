@@ -11,19 +11,24 @@ const Picker = require('./Picker')
 const FIELDS = ['timestamp', 'level', 'message']
 
 class MainPanel extends BaseWidget {
-  constructor (opts = {}) {
-    super(Object.assign({}, { top: '0', height: '99%', handleKeys: true }, opts))
+  constructor ({ screen, config = {} }) {
+    super({
+      top: '0',
+      height: '99%',
+      handleKeys: true,
+      screen
+    })
 
-    this.currentPage = opts.currentPage || 1
-    this.initialRow = opts.initialRow || 0
-    this.colSpacing = opts.colSpacing || 2
-    this.wrap = opts.wrap || true
+    this.currentPage = config.currentPage || 1
+    this.initialRow = config.initialRow || 0
+    this.colSpacing = config.colSpacing || 2
+    this.wrap = config.wrap || true
     this.row = 0
     this.rows = []
     this.lastSearchTerm = null
-    this.levelFilter = opts.level
+    this.levelFilter = config.level
     this.filters = []
-    this.sort = opts.sort || '-timestamp'
+    this.sort = config.sort
     this.mode = 'normal'
     this.updated = true
 
@@ -37,7 +42,7 @@ class MainPanel extends BaseWidget {
       this.renderLines()
     })
 
-    this.loadFile(opts.logFile)
+    this.loadFile(config.logFile)
   }
 
   get pageHeight () { return this.height - 3 }

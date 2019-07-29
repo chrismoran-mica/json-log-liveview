@@ -2,7 +2,7 @@ const blessed = require('blessed')
 
 class BaseWidget extends blessed.Box {
   constructor (opts) {
-    super(Object.assign({}, {
+    super({
       top: 'center',
       left: 'center',
       width: '100%',
@@ -10,8 +10,9 @@ class BaseWidget extends blessed.Box {
       tags: true,
       border: { type: 'line' },
       interactive: true,
-      padding: { left: 1, right: 1 }
-    }, opts))
+      padding: { left: 1, right: 1 },
+      ...opts
+    })
 
     if (opts.handleKeys && this.handleKeyPress) {
       this.on('keypress', this.handleKeyPress.bind(this))

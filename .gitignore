@@ -10,4 +10,4 @@ compiled
 .DS_Store
 coverage
 app.log
-logfile.log
+log

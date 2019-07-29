@@ -1,34 +1,22 @@
 #!/usr/bin/env node
-const minimist = require('minimist')
 const blessed = require('blessed')
-const _ = require('lodash')
 require('./polyfills')
 
 const MainPanel = require('./widgets/MainPanel')
 const StatusLine = require('./widgets/StatusLine')
 
-const opts = minimist(process.argv.slice(2))
-
-const logFile = opts._[0]
-if (!logFile) {
-  console.log('error: missing log file')
-  process.exit(1)
-}
+const config = require('./config')
 
 const screen = blessed.screen({
   smartCSR: true,
-  log: opts.debug !== undefined ? opts.debug || './log' : false
+  log: config.debug
 })
+
 screen.key(['C-c'], function (_ch, _key) {
   return process.exit(0)
 })
 
-const level = opts.l || opts.level
-const sort = opts.s || opts.sort
-
-const args = { screen, level, sort, logFile }
-
-const mainPanel = new MainPanel(args)
+const mainPanel = new MainPanel({ screen, config })
 
 const statusLine = new StatusLine({ screen, mainPanel })
 screen.append(statusLine)
