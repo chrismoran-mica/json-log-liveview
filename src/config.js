@@ -48,7 +48,8 @@ const config = {
     fatal: 60
   },
   debug: false,
-  sort: 'timestamp',
+  sort: '-timestamp',
+  interval: false,
   ...globalConfig,
   ...localConfig
 }
@@ -64,5 +65,6 @@ if (!config.logFile) {
 setFlag(config, 'debug', opts.d || opts.debug, './log')
 setFlag(config, 'level', opts.l || opts.level)
 setFlag(config, 'sort', opts.s || opts.sort)
+setFlag(config, 'interval', opts.i || opts.interval, true)
 
 module.exports = config

@@ -3,18 +3,27 @@ const _ = require('lodash')
 const COLOR_TAG_REGEX = /{\/?[\w\-,;!#]+}/g
 
 const formatRows = (rows, columns, spacing = 1, maxWidth) => {
-  const lengths = maxLengths(columns, rows, spacing, maxWidth)
-  return rows.map(row => {
-    return columns.map(column => {
+  const formatted = rows.map(row => {
+    const newRow = {}
+    for (const column of columns) {
       const { format, key } = column
       const rawValue = row[key]
-
+      let value = row[key]
       try {
-        const value = _.isFunction(format) ? format(rawValue) : rawValue
-        return padEnd(value, lengths[key], !format)
-      } catch (e) {
-        return rawValue
+        value = _.isFunction(format) ? format(rawValue) : value
+      } finally {
+        newRow[key] = value
       }
+    }
+    return newRow
+  })
+
+  const lengths = maxLengths(columns, formatted, spacing, maxWidth)
+
+  return formatted.map(row => {
+    return columns.map(column => {
+      const { key, format } = column
+      return padEnd(row[key], lengths[key], !format)
     }).join(spaces(spacing))
   })
 }
@@ -23,7 +32,7 @@ const maxLengths = (columns, arr, spacing, maxWidth) => {
   const lengths = arr.reduce((map, row) => {
     columns.slice(0, -1).forEach(col => {
       const val = row[col.key] || ''
-      map[col.key] = col.length || Math.max(map[col.key] || 0, len(val.toString()))
+      map[col.key] = Math.max(map[col.key] || 0, len(val.toString()))
     })
     return map
   }, {})
@@ -38,7 +47,10 @@ const hasColors = (text) => {
 }
 
 const stripColors = (text) => {
-  return (text || '').replace(COLOR_TAG_REGEX, '').replace(/\{\/}/g, '')
+  if (typeof text === 'string') {
+    return (text || '').toString().replace(COLOR_TAG_REGEX, '').replace(/\{\/}/g, '')
+  }
+  return text
 }
 
 const len = (text, ignoreColors = false) => {

@@ -19,6 +19,8 @@ class MainPanel extends BaseWidget {
       screen
     })
 
+    this.config = config
+
     this.currentPage = config.currentPage || 1
     this.initialRow = config.initialRow || 0
     this.colSpacing = config.colSpacing || 2
@@ -52,7 +54,11 @@ class MainPanel extends BaseWidget {
   loadFile (file) {
     this.file = file
     readLogAsync(file, this.updateLines.bind(this))
-    watchLog(file, this.updateLines.bind(this))
+    if (this.config.interval) {
+      setInterval(() => readLogAsync(file, this.updateLines.bind(this)), 1000)
+    } else {
+      watchLog(file, this.updateLines.bind(this))
+    }
   }
 
   updateLines (err, data) {
@@ -511,7 +517,17 @@ class MainPanel extends BaseWidget {
     this.setLabel(`[{bold} ${this.file} {/}] [{bold} ${this.row + 1}/${this.lastRow + 1} {/}]`)
 
     const columns = [
-      { title: 'Timestamp', key: 'timestamp' },
+      { title: 'Timestamp',
+        key: 'timestamp',
+        format: v => new Date(v).toLocaleDateString(undefined, {
+          day: '2-digit',
+          year: '2-digit',
+          month: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        })
+      },
       { title: 'Level', key: 'level', format: v => levelColors[v](v) },
       { title: 'D', key: 'data', length: 1, format: v => _.isEmpty(v) ? ' ' : '*' },
       { title: 'Message', key: 'message' }
