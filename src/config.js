@@ -1,30 +1,30 @@
-const minimist = require('minimist')
-const path = require('path')
-const os = require('os')
-const fs = require('fs')
+const minimist = require('minimist');
+const path = require('path');
+const os = require('os');
+const fs = require('fs');
 
 function setFlag (obj, name, val, def) {
   if (val !== undefined) {
     if (typeof val === 'string') {
-      obj[name] = val
+      obj[name] = val;
     } else if (val && def) {
-      obj[name] = def
+      obj[name] = def;
     }
   }
 }
 
-const CONFIG_NAME = 'json-log-liveview.config.json'
+const CONFIG_NAME = 'json-log-liveview.config.json';
 
-const globalConfigPath = path.join(os.homedir(), CONFIG_NAME)
-let globalConfig = {}
+const globalConfigPath = path.join(os.homedir(), CONFIG_NAME);
+let globalConfig = {};
 if (fs.existsSync(globalConfigPath)) {
-  globalConfig = JSON.parse(fs.readFileSync(globalConfigPath))
+  globalConfig = JSON.parse(fs.readFileSync(globalConfigPath));
 }
 
-const localConfigPath = path.join(process.cwd(), CONFIG_NAME)
-let localConfig = {}
+const localConfigPath = path.join(process.cwd(), CONFIG_NAME);
+let localConfig = {};
 if (fs.existsSync(localConfigPath)) {
-  localConfig = JSON.parse(fs.readFileSync(localConfigPath))
+  localConfig = JSON.parse(fs.readFileSync(localConfigPath));
 }
 
 const config = {
@@ -32,12 +32,12 @@ const config = {
     timestamp: 'time',
     level: 'level',
     message: 'msg',
-    data: '$'
+    data: '$',
   },
   visibleFields: [
     'timestamp',
     'level',
-    'message'
+    'message',
   ],
   logLevels: {
     trace: 10,
@@ -45,26 +45,26 @@ const config = {
     info: 30,
     warn: 40,
     error: 50,
-    fatal: 60
+    fatal: 60,
   },
   debug: false,
   sort: '-timestamp',
   interval: false,
   ...globalConfig,
-  ...localConfig
-}
+  ...localConfig,
+};
 
-const opts = minimist(process.argv.slice(2))
+const opts = minimist(process.argv.slice(2));
 
-config.logFile = opts._[0]
+config.logFile = opts._[0];
 if (!config.logFile) {
-  console.log('Error: Missing log file.')
-  process.exit(1)
+  console.log('Error: Missing log file.');
+  process.exit(1);
 }
 
-setFlag(config, 'debug', opts.d || opts.debug, './log')
-setFlag(config, 'level', opts.l || opts.level)
-setFlag(config, 'sort', opts.s || opts.sort)
-setFlag(config, 'interval', opts.i || opts.interval, true)
+setFlag(config, 'debug', opts.d || opts.debug, './log');
+setFlag(config, 'level', opts.l || opts.level);
+setFlag(config, 'sort', opts.s || opts.sort);
+setFlag(config, 'interval', opts.i || opts.interval, true);
 
-module.exports = config
+module.exports = config;

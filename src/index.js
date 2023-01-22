@@ -1,29 +1,29 @@
 #!/usr/bin/env node
-const blessed = require('blessed')
-require('./polyfills')
+const blessed = require('blessed');
+require('./polyfills');
 
-const MainPanel = require('./widgets/MainPanel')
-const StatusLine = require('./widgets/StatusLine')
+const MainPanel = require('./widgets/MainPanel');
+const StatusLine = require('./widgets/StatusLine');
 
-const config = require('./config')
+const config = require('./config');
 
 const screen = blessed.screen({
   smartCSR: true,
-  log: config.debug
-})
+  log: config.debug,
+});
 
 screen.key(['C-c'], function (_ch, _key) {
-  return process.exit(0)
-})
+  return process.exit(0);
+});
 
-const mainPanel = new MainPanel({ screen, config })
+const mainPanel = new MainPanel({ screen, config });
 
-const statusLine = new StatusLine({ screen, mainPanel })
-screen.append(statusLine)
-mainPanel.setCurrent()
+const statusLine = new StatusLine({ screen, mainPanel });
+screen.append(statusLine);
+mainPanel.setCurrent();
 
-screen.render()
+screen.render();
 
 process.on('SIGWINCH', function () {
-  screen.emit('resize')
-})
+  screen.emit('resize');
+});

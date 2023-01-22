@@ -1,4 +1,4 @@
-const blessed = require('blessed')
+const blessed = require('blessed');
 
 class BaseWidget extends blessed.Box {
   constructor (opts) {
@@ -11,26 +11,26 @@ class BaseWidget extends blessed.Box {
       border: { type: 'line' },
       interactive: true,
       padding: { left: 1, right: 1 },
-      ...opts
-    })
+      ...opts,
+    });
 
     if (opts.handleKeys && this.handleKeyPress) {
-      this.on('keypress', this.handleKeyPress.bind(this))
+      this.on('keypress', this.handleKeyPress.bind(this));
     }
 
-    this.screen = opts.screen || opts.parent.screen
-    this.screen.append(this)
+    this.screen = opts.screen || opts.parent.screen;
+    this.screen.append(this);
   }
 
   log (...s) {
-    this.screen.log(...s)
+    this.screen.log(...s);
   }
 
   setCurrent () {
-    this.focus()
-    this.screen.render()
-    return this
+    this.focus();
+    this.screen.render();
+    return this;
   }
 }
 
-module.exports = BaseWidget
+module.exports = BaseWidget;
