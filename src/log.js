@@ -10,6 +10,7 @@ function transform (entry) {
     return result;
   }, {});
 
+  //@TODO: tie this back in!
   _entry.__$levelFilter = _.invert(config.logLevels)[entry.level];
   return _entry;
 }
