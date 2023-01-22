@@ -272,13 +272,13 @@ class MainPanel extends BaseWidget {
 
   openFilter () {
     this.setMode('filter');
-    const fields = ['timestamp', 'level', 'message', 'other'];
+    const fields = [...this.config.visibleFields, ...['data']];
     this.openPicker('Filter by', fields, (err, field) => {
       if (err || !field) { return this.resetMode(); }
       if (field === 'level') {
         return this.openLevelFilter();
       }
-      if (field === 'other') {
+      if (field === 'data') {
         return this.openCustomFilter();
       }
       this.openFilterTerm(field);
