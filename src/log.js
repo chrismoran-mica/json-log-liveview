@@ -3,21 +3,29 @@ const _ = require('lodash');
 
 const config = require('./config');
 
+const last = {
+  timestamp: undefined,
+};
+
 function transform (entry) {
   const _entry = Object.keys(config.mapping).reduce((result, key) => {
     const value = mappingContext(key);
     result[value.key] = value.value(entry);
+    if (value.key === 'timestamp') {
+      last[value.key] = result[value.key];
+    }
     return result;
   }, {});
 
   //@TODO: tie this back in!
-  _entry.__$levelFilter = _.invert(config.logLevels)[entry.level];
+  const levelMapping = mappingContext('level');
+  _entry.levelFilter = _.invert(config.logLevels)[levelMapping.value(entry)];
   return _entry;
 }
 
 function mappingContext(key) {
-  if (typeof config.mapping[key] === 'string' && config.mapping[key].indexOf('return') === 0) {
-    const fn = new Function('context', config.mapping[key]);
+  if (typeof config.mapping[key] === 'string' && config.mapping[key].indexOf('return') !== -1) {
+    const fn = new Function(key, 'return ' + config.mapping[key])();
     return {
       key,
       value: x => fn(_.get(x, key)),
@@ -35,14 +43,21 @@ function mappingContext(key) {
       };
     }
   }
-  return { key, value: (x) => x };
+  return { key, value: (x) => _.get(x, key) };
 }
 
 function parse (line) {
   try {
     return transform(JSON.parse(line));
   } catch (e) {
-    return null;
+    return {
+      timestamp: last.timestamp,
+      message: line,
+      level: 'parse',
+      data: {
+        raw: line,
+      },
+    };
   }
 }
 

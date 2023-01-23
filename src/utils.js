@@ -108,6 +108,7 @@ const levelColors = {
   info: s => `{cyan-fg}{bold}${s}{/bold}{/}`,
   warn: s => `{yellow-fg}${s}{/}`,
   warning: s => `{yellow-fg}${s}{/}`,
+  parse: s => `{gray-fg}${s}{/}`,
   error: s => `{red-fg}${s}{/}`,
 };
 

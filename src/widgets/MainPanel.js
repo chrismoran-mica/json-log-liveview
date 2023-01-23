@@ -20,6 +20,8 @@ class MainPanel extends BaseWidget {
     });
 
     this.config = config;
+    FIELDS.splice(0);
+    FIELDS.push(...this.config.visibleFields);
 
     this.currentPage = config.currentPage || 1;
     this.initialRow = config.initialRow || 0;
@@ -304,6 +306,7 @@ class MainPanel extends BaseWidget {
 
   setSort (sort) {
     this.sort = sort;
+    this.setUpdated();
     this.renderLines();
   }
 
@@ -528,7 +531,7 @@ class MainPanel extends BaseWidget {
           second: '2-digit',
         }),
       },
-      { title: 'Level', key: 'level', format: v => (levelColors[v] || (s => `{red-fg}${s.substring(0, 4)}{/red-fg}`))(v) },
+      { title: 'Level', key: 'level', format: v => (levelColors[v] || (s => `{red-fg}${s}{/}`))(v) },
       { title: 'D', key: 'data', length: 1, format: v => _.isEmpty(v) ? ' ' : '*' },
       { title: 'Message', key: 'message' },
     ];
