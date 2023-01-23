@@ -3,47 +3,48 @@ const _ = require('lodash');
 
 const config = require('./config');
 
+const fLogLevel = '__$logLevel';
+
 const last = {
   timestamp: undefined,
 };
 
 function transform (entry) {
+  // noinspection UnnecessaryLocalVariableJS
   const _entry = Object.keys(config.mapping).reduce((result, key) => {
-    const value = mappingContext(key);
-    result[value.key] = value.value(entry);
-    if (value.key === 'timestamp') {
-      last[value.key] = result[value.key];
+    const { format } = mappingContext(key);
+    result[key] = format(entry);
+    if (key === 'timestamp') {
+      last[key] = result[key];
     }
     return result;
   }, {});
 
-  //@TODO: tie this back in!
-  const levelMapping = mappingContext('level');
-  _entry.levelFilter = _.invert(config.logLevels)[levelMapping.value(entry)];
+  _entry[fLogLevel] = config.logLevels[_entry.level];
   return _entry;
 }
 
 function mappingContext(key) {
-  if (typeof config.mapping[key] === 'string' && config.mapping[key].indexOf('return') !== -1) {
-    const fn = new Function(key, 'return ' + config.mapping[key])();
+  if (typeof config.mapping[key] === 'object') {
+    const {key: mkey, format} = config.mapping[key];
+    const fn = format ? new Function(mkey, 'return ' + (typeof format === 'object' ? format.join(' ') : format))() : (x) => x;
     return {
-      key,
-      value: x => fn(_.get(x, key)),
+      format: x => fn(_.get(x, mkey), x),
     };
   } else if (typeof config.mapping[key] === 'string') {
     if (config.mapping[key] === '$') {
       return {
-        key,
-        value: (x) => _.cloneDeep(x),
+        format: (x) => _.cloneDeep(x),
       };
     } else {
       return {
-        key,
-        value: (x) => _.get(x, config.mapping[key]),
+        format: (x) => _.get(x, config.mapping[key]),
       };
     }
   }
-  return { key, value: (x) => _.get(x, key) };
+  return {
+    format: (x) => _.get(x, key),
+  };
 }
 
 function parse (line) {
@@ -81,4 +82,4 @@ function watchLog (file, callback) {
   });
 }
 
-module.exports = { readLogAsync, transform, watchLog };
+module.exports = { readLogAsync, transform, watchLog, fLogLevel };

@@ -1,5 +1,6 @@
 const blessed = require('blessed');
 const _ = require('lodash');
+const { levelModes } = require('../utils');
 
 class StatusLine extends blessed.Box {
   constructor (opts = {}) {
@@ -39,9 +40,10 @@ class StatusLine extends blessed.Box {
   get pageHeight () { return this.mainPanel.pageHeight; }
 
   get filters () {
-    const { filters, levelFilter } = this.mainPanel;
+    const { filters, levelFilter, levelMode, config } = this.mainPanel;
     if (this.mainPanel.levelFilter) {
-      return filters.concat({ key: 'level', value: levelFilter });
+      const levels = [..._.keys(config.logLevels).filter(l => levelModes[levelMode](config.logLevels[l], levelFilter))];
+      return filters.concat({ key: 'level', value: `${_.concat(levels)}` });
     }
     return filters;
   }

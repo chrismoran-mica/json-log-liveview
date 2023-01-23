@@ -1,14 +1,12 @@
 const blessed = require('blessed');
 const _ = require('lodash');
 
-const { readLogAsync, watchLog } = require('../log');
-const { formatRows, levelColors } = require('../utils');
+const { readLogAsync, watchLog, fLogLevel } = require('../log');
+const { formatRows, levelColors, levelModes } = require('../utils');
 
 const BaseWidget = require('./BaseWidget');
 const LogDetails = require('./LogDetails');
 const Picker = require('./Picker');
-
-const FIELDS = ['timestamp', 'level', 'message'];
 
 class MainPanel extends BaseWidget {
   constructor ({ screen, config = {} }) {
@@ -20,8 +18,7 @@ class MainPanel extends BaseWidget {
     });
 
     this.config = config;
-    FIELDS.splice(0);
-    FIELDS.push(...this.config.visibleFields);
+    this.FIELDS = [...this.config.visibleFields];
 
     this.currentPage = config.currentPage || 1;
     this.initialRow = config.initialRow || 0;
@@ -31,6 +28,7 @@ class MainPanel extends BaseWidget {
     this.rows = [];
     this.lastSearchTerm = null;
     this.levelFilter = config.level;
+    this.levelMode = 0;
     this.filters = [];
     this.sort = config.sort;
     this.mode = 'normal';
@@ -108,7 +106,7 @@ class MainPanel extends BaseWidget {
 
     const filters = _.cloneDeep(this.filters);
     if (this.levelFilter) {
-      filters.push({ key: 'level', value: this.levelFilter });
+      filters.push({ key: fLogLevel, value: this.levelFilter, method: levelModes[this.levelMode]});
     }
 
     if (!filters.length) {
@@ -119,15 +117,15 @@ class MainPanel extends BaseWidget {
 
     return sort(this.rawLines.filter(line => {
       return filters.reduce((bool, filter) => {
-        const key = FIELDS.indexOf(filter.key) > -1
-          ? filter.key : `data.${filter.key}`;
+        const key = [fLogLevel, ...this.FIELDS].indexOf(filter.key) > -1
+          ? filter.key : `data["${filter.key}"]`;
         const value = _.get(line, key);
         if (!value) { return false; }
         if (!filter.method) {
           return value && value === filter.value;
         }
-        if (filter.method === 'contains') {
-          return value && value.toString().toLowerCase().indexOf(filter.value.toLowerCase()) > -1;
+        if (filter.method) {
+          return filter.method(value, filter.value);
         }
       }, true);
     }));
@@ -225,17 +223,17 @@ class MainPanel extends BaseWidget {
   }
 
   openLevelFilter () {
-    const levels = ['all', 'debug', 'info', 'warn', 'error'];
+    const levels = ['all', ..._.keys(this.config.logLevels)];
     this.openPicker('Log Level', levels, (err, level) => {
-      if (!level) { return; }
+      if (!level.item) { return; }
       if (err) { return; }
 
       this.log('selected', level);
-      if (level === 'all') {
+      if (level.item === 'all') {
         return this.clearFilters();
       }
       this.setLevelFilter(level);
-    });
+    }, true);
   }
 
   get sortKey () {
@@ -248,7 +246,7 @@ class MainPanel extends BaseWidget {
 
   openSort () {
     this.setMode('sort');
-    this.openPicker('Sort by', FIELDS, (err, sort) => {
+    this.openPicker('Sort by', this.FIELDS, (err, sort) => {
       if (!sort) { return this.resetMode(); }
       if (err) { return; }
       if (this.sortKey === sort && this.sortAsc) {
@@ -274,7 +272,7 @@ class MainPanel extends BaseWidget {
 
   openFilter () {
     this.setMode('filter');
-    const fields = [...this.config.visibleFields, ...['data']];
+    const fields = [...this.config.visibleFields, 'data'];
     this.openPicker('Filter by', fields, (err, field) => {
       if (err || !field) { return this.resetMode(); }
       if (field === 'level') {
@@ -291,7 +289,7 @@ class MainPanel extends BaseWidget {
     this.prompt(`Field to filter:`, '', (field) => {
       if (!field) { return this.resetMode(); }
       if (field.indexOf(':') > -1) {
-        return this.setFilter(field.split(':')[0], field.split(':')[1], 'contains');
+        return this.setFilter(field.split(':')[0], field.split(':')[1], (a, b) => a && b && a.toLowerCase().indexOf(b.toLowerCase()) > -1);
       }
       this.openFilterTerm(field);
     });
@@ -300,7 +298,7 @@ class MainPanel extends BaseWidget {
   openFilterTerm (field) {
     this.prompt(`Filter ${field} by:`, '', (value) => {
       if (!value) { return this.resetMode(); }
-      this.setFilter(field, value, 'contains');
+      this.setFilter(field, value, (a, b) => a && b && a.toLowerCase().indexOf(b.toLowerCase()) > -1);
     });
   }
 
@@ -311,7 +309,8 @@ class MainPanel extends BaseWidget {
   }
 
   setLevelFilter (level) {
-    this.levelFilter = level;
+    this.levelFilter = this.config.logLevels[level.item];
+    this.levelMode = level.mode;
     this.filterChanged();
   }
 
@@ -333,8 +332,8 @@ class MainPanel extends BaseWidget {
     this.filterChanged();
   }
 
-  openPicker (label, items, callback) {
-    const picker = new Picker(this, { label, items, keySelect: true });
+  openPicker (label, items, callback, tabMode = false) {
+    const picker = new Picker(this, { label, items, keySelect: true, tabMode: tabMode });
     picker.on('select', (err, value) => callback(null, value));
     picker.setCurrent();
   }
@@ -391,7 +390,7 @@ class MainPanel extends BaseWidget {
   }
 
   message (str) {
-    var msg = blessed.question({
+    const msg = blessed.question({
       parent: this,
       border: 'line',
       height: 'shrink',
@@ -520,18 +519,8 @@ class MainPanel extends BaseWidget {
     this.setLabel(`[{bold} ${this.file} {/}] [{bold} ${this.row + 1}/${this.lastRow + 1} {/}]`);
 
     const defColumns = [
-      { title: 'Timestamp',
-        key: 'timestamp',
-        format: v => new Date(v).toLocaleDateString('en-US', {
-          day: '2-digit',
-          year: '2-digit',
-          month: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-        }),
-      },
-      { title: 'Level', key: 'level', format: v => (levelColors[v] || (s => `{red-fg}${s}{/}`))(v) },
+      { title: 'Timestamp', key: 'timestamp' },
+      { title: 'Level', key: 'level', format: v => (levelColors[v] || (s => `{red-fg}${s}{/}`))(_.truncate(_.pad(v, 5, ' '), {length: 5, omission: ''})) },
       { title: 'D', key: 'data', length: 1, format: v => _.isEmpty(v) ? ' ' : '*' },
       { title: 'Message', key: 'message' },
     ];

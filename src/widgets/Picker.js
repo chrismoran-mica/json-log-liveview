@@ -1,6 +1,4 @@
 const blessed = require('blessed');
-const _ = require('lodash');
-
 const BaseWidget = require('./BaseWidget');
 
 class Picker extends BaseWidget {
@@ -32,6 +30,11 @@ class Picker extends BaseWidget {
     this.items = opts.items;
     this.label = opts.label || 'Select item';
     this.keySelect = !!opts.keySelect;
+    this.tabMode = !!opts.tabMode;
+    if (this.tabMode) {
+      this.modes = ['', '(at least)', '(at most)'];
+      this.mode = 0;
+    }
     this.update();
   }
 
@@ -57,7 +60,11 @@ class Picker extends BaseWidget {
   }
 
   handleSelected (err, value) {
-    this.selected(this.items[value]);
+    if (this.tabMode) {
+      this.selected({ item: this.items[value], mode: this.mode });
+    } else {
+      this.selected(this.items[value]);
+    }
   }
 
   selected (value) {
@@ -78,6 +85,12 @@ class Picker extends BaseWidget {
 
     if (key.name === 'escape') {
       this.selected(null);
+    }
+
+    if (this.tabMode && key.name === 'tab') {
+      this.mode = (this.mode + 1) % this.modes.length;
+      this.setLabel(`{bold} ${this.label} ${this.modes[this.mode]}{/}`);
+      this.screen.render();
     }
   }
 

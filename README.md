@@ -66,31 +66,59 @@ You can create a configuration like this:
 ```json
 {
   "mapping": {
-    "timestamp": "datetime.date",
-    "level": "level_name",
-    "message": "message",
-    "cid": "return cid !== undefined ? cid : 'N/A'",
-    "data": "$" 
-  },  
+    "timestamp": {
+      "key": "time",
+      "format": "(time) => new Date(time).toLocaleDateString('en-US', { day: '2-digit', year: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })"
+    },
+    "level": "level",
+    "message": {
+      "key": "msg",
+      "format": [
+        "(msg, entry) => {",
+        "if (entry.sql) {",
+        "return msg + ': ' + entry.sql;",
+        "} else if (entry.method && entry.req_type) {",
+        "return entry.req_type + ': ' + entry.method;",
+        "} else {",
+        "return msg;",
+        "}",
+        "}"
+      ]
+    },
+    "cid": {
+      "key": "cid",
+      "format": "(cid) => cid !== undefined ? cid : 'N/A'"
+    },
+    "data": "$"
+  },
   "visibleFields": [
     "timestamp",
     "level",
     "cid",
     "message"
-  ],  
+  ],
   "logLevels": {
-    "trace": 10, 
-    "debug": 20, 
-    "info": 30, 
-    "warn": 40, 
-    "error": 50, 
+    "trace": 10,
+    "debug": 20,
+    "info": 30,
+    "warn": 40,
+    "error": 50,
     "fatal": 60
-  },  
+  },
   "debug": false,
   "sort": "-timestamp",
   "interval": false
 }
 ```
+
+Note the `format` key within the `mapping` object. This represents a function that takes two parameters: `value`, `entry`. `value` is the value of the log entry at `key`, `entry` is the log entry itself. `format` enables custom handling of any value within the log entry.
+
+`format` can be a `string` or `string[]`. If `format` is a `string[]` it is `.join(' ')`ed before conversion to a function. (The intention of allowing `string[]` is solely for readability wihin the config)
+
+`format` and the function it generates shares the same restrictions as any other dynamic function:
+
+* only has access to the global scope and parameters passed into it
+* no access to local context
 
 This way the messages will properly be displayed. The `$` has a special meaning: it indicates that the the raw structured log object should be included on the `data` key on the resulting JSON. 
 

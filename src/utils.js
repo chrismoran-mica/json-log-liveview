@@ -103,13 +103,20 @@ const trunc = (text, length, ignoreColors = false) => {
   return `${output}{/}`;
 };
 
+const levelModes = [
+  (l, m) => l === m, // level is exactly
+  (l, m) => l >= m, // level is at least
+  (l, m) => l <= m, // level is at most
+];
+
 const levelColors = {
   debug: s => `{green-fg}${s}{/}`,
   info: s => `{cyan-fg}{bold}${s}{/bold}{/}`,
   warn: s => `{yellow-fg}${s}{/}`,
   warning: s => `{yellow-fg}${s}{/}`,
   parse: s => `{gray-fg}${s}{/}`,
+  trace: s => `{bold}${s}{/}`,
   error: s => `{red-fg}${s}{/}`,
 };
 
-module.exports = { formatRows, maxLengths, hasColors, stripColors, spaces, padEnd, len, trunc, levelColors };
+module.exports = { formatRows, maxLengths, hasColors, stripColors, spaces, padEnd, len, trunc, levelColors, levelModes };
