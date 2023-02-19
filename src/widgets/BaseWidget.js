@@ -1,6 +1,6 @@
 const blessed = require('blessed');
 
-class BaseWidget extends blessed.Box {
+class BaseWidget extends blessed.box {
   constructor (opts) {
     super({
       top: 'center',

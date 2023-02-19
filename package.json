@@ -20,10 +20,10 @@
     "minimist": "1.2.7"
   },
   "devDependencies": {
-    "standard": "^13.1.0",
     "eslint": "8.32.0",
     "eslint-plugin-import": "2.27.5",
-    "eslint-plugin-mocha": "10.1.0"
+    "eslint-plugin-mocha": "10.1.0",
+    "standard": "^13.1.0"
   },
   "scripts": {
     "debug": "node --inspect src/index.js"

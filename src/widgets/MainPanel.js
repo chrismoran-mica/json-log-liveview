@@ -425,8 +425,8 @@ class MainPanel extends BaseWidget {
   }
 
   moveToLine (num) {
-    this.row = num;
-    this.initialRow = num;
+    this.row = Math.max(0, num);
+    this.initialRow = Math.max(0, num);
     this.renderLines();
   }
 
@@ -446,7 +446,7 @@ class MainPanel extends BaseWidget {
   }
 
   moveToCenterViewportLine () {
-    this.row = parseInt((this.initialRow + this.pageHeight) / 2, 10);
+    this.row = parseInt(('' + (this.initialRow + this.pageHeight) / 2), 10);
     this.renderLines();
   }
 
